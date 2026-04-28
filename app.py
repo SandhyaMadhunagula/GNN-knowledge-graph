@@ -168,4 +168,5 @@ def clear_db():
     return redirect(url_for('index'))
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    # 0.0.0.0 makes it accessible to the internet
+    app.run(host="0.0.0.0", port=7860, debug=True)
