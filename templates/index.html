@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>GNN Knowledge Extraction Dashboard</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+
+    <style>
+
+        :root {
+
+            --primary-color: #0d6efd;
+
+            --glass-bg: rgba(255, 255, 255, 0.88);
+
+        }
+
+
+
+        body {
+
+            font-family: 'Segoe UI', sans-serif;
+
+            /* Using your uploaded background pattern style */
+
+            background: black url('static/network_bg.png') no-repeat center center fixed;
+
+            background-size: cover;
+
+            margin: 0;
+
+            padding: 20px;
+
+            height: 100vh;
+
+            overflow: hidden;
+
+        }
+
+
+
+        .project-header {
+
+            text-align: center;
+
+            color: white; /* Changed to white to pop against dark bg */
+
+            margin-bottom: 20px;
+
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+
+        }
+
+
+
+        .dashboard-container {
+
+            display: flex;
+
+            max-width: 1600px;
+
+            margin: 0 auto;
+
+            gap: 20px;
+
+            height: calc(100vh - 120px);
+
+        }
+
+
+
+        .control-panel {
+
+            flex: 1;
+
+            background: var(--glass-bg);
+
+            padding: 25px;
+
+            border-radius: 15px;
+
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+
+            overflow-y: auto;
+
+            backdrop-filter: blur(10px); /* Makes it look modern */
+
+        }
+
+
+
+        .graph-panel {
+
+            flex: 2;
+
+            background: rgba(255, 255, 255, 0.95);
+
+            padding: 10px;
+
+            border-radius: 15px;
+
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+
+            display: flex;
+
+            flex-direction: column;
+
+        }
+
+
+
+        .card-section {
+
+            background: white;
+
+            padding: 15px;
+
+            border-radius: 10px;
+
+            margin-bottom: 20px;
+
+            border: 1px solid #dee2e6;
+
+        }
+
+
+
+        .answer-box {
+
+            background: #e3f2fd;
+
+            border-left: 5px solid #1976d2;
+
+            padding: 15px;
+
+            border-radius: 8px;
+
+            margin-top: 15px;
+
+        }
+
+
+
+        iframe {
+
+            flex-grow: 1;
+
+            width: 100%;
+
+            border-radius: 10px;
+
+            border: none;
+
+        }
+
+       
+
+        .badge-interactive {
+
+            background: #6c5ce7;
+
+            color: white;
+
+            padding: 5px 10px;
+
+            border-radius: 20px;
+
+            font-size: 0.8rem;
+
+        }
+
+
+
+        /* --- GLOWING NODES CONFIGURATION --- */
+
+/* This makes the bubbles in the graph look like they belong on your background */
+
+.graph-panel iframe {
+
+    filter: drop-shadow(0 0 10px rgba(108, 92, 231, 0.3));
+
+}
+
+/* ------------------------------------ */
+
+    </style>
+
+</head>
+
+<body>
+
+
+
+    <div class="project-header">
+
+        <h2 class="fw-bold">🧠 GNN Knowledge Graph Extractor</h2>
+
+        <p>Intelligent Entity-Relationship Mapping & Discovery</p>
+
+    </div>
+
+    <div class="dashboard-container">
+
+        <div class="control-panel">
+    
+            <form method="POST" enctype="multipart/form-data">
+
+                <div class="card-section shadow-sm">
+
+                    <h5>1. Text & Documents</h5>
+
+                   <!-- <textarea name="text" class="form-control mb-3" rows="5" placeholder="Paste text here...">{{ user_text }}</textarea>--->
+                    <textarea name="text" class="form-control mb-3" rows="5" placeholder="Paste text here...">{{ session.get('user_text', '') }}</textarea>
+
+                    <input type="file" name="file" class="form-control mb-3" accept=".pdf,.docx,.txt">
+
+                    <button type="submit" class="btn btn-primary w-100">Process & Expand Graph</button>
+
+                </div>
+
+            </form>
+
+            <div class="card-section shadow-sm">
+                <h5>2. Ask the Graph</h5>
+                <form method="POST">
+
+                    <input type="text" name="query" class="form-control mb-3" placeholder="Search entity..." value="{{ user_query }}">
+
+                    <div class="d-flex gap-2">
+
+                        <button type="submit" class="btn btn-success flex-grow-1">Ask Question</button>
+
+                        <a href="/" class="btn btn-outline-secondary">Clear Query</a>
+                    </div>
+                </form>
+
+                {% if answer %}
+
+                <div class="answer-box shadow-sm">
+
+                    <strong>Result:</strong><br>
+
+                    <div class="mt-2">{{ answer | safe }}</div>
+
+                </div>
+
+                {% endif %}
+
+            </div>
+
+            <div class="mt-auto">
+    <button type="button" class="btn btn-outline-info w-100 mb-2" data-bs-toggle="modal" data-bs-target="#dbModal">
+        🔍 View Database Table
+    </button>
+    <a href="/clear" class="btn btn-danger w-100 opacity-75" onclick="return confirm('ERASE ALL KNOWLEDGE?')">
+        Reset Full Database
+    </a>
+</div>
+
+        </div>
+
+
+
+        <div class="graph-panel">
+
+            <div class="d-flex justify-content-between align-items-center mb-2 px-2">
+
+                <h5 class="m-0">Graph Visualization</h5>
+
+                <span class="badge-interactive">Live Interactive Nodes</span>
+
+            </div>
+
+            {% if graph %}
+
+                <iframe src="{{ url_for('static', filename='graph.html') }}"></iframe>
+
+            {% else %}
+
+                <div class="h-100 d-flex align-items-center justify-content-center text-muted border rounded">
+
+                    Waiting for data to map relationships...
+
+                </div>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+<div class="modal fade" id="dbModal" tabindex="-1" aria-hidden="true">
+
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+
+        <div class="modal-content">
+
+            <div class="modal-header">
+
+                <h5 class="modal-title">Extracted Knowledge Base (Triples)</h5>
+                <a href="/export_csv" class="btn btn-success btn-sm ms-3">
+        📊 Download CSV
+              </a>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+
+            </div>
+
+            <div class="modal-body">
+
+                <table class="table table-hover">
+
+                    <thead class="table-dark">
+
+                        <tr>
+
+                            <th>Subject</th>
+
+                            <th>Relationship</th>
+
+                            <th>Object</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        {% for triple in db_triples %}
+
+                        <tr>
+
+                            <td><strong>{{ triple.s }}</strong></td>
+
+                            <td><span class="badge bg-primary">{{ triple.r }}</span></td>
+
+                            <td><strong>{{ triple.o }}</strong></td>
+
+                        </tr>
+
+                        {% else %}
+
+                        <tr>
+
+                            <td colspan="3" class="text-center text-muted">No data in database yet.</td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+
+</html>

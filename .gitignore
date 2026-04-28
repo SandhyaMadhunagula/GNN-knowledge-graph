@@ -1,0 +1,27 @@
+venv/
+__pycache__/
+*.pyc
+*.npy
+# Models and Vectorizers (Large files)
+*.pkl
+*.joblib
+*.pth
+*.h5
+
+# Datasets and Outputs
+*.csv
+*.db
+ner_output.csv
+
+# IDE and System Files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Notebook Checkpoints
+.ipynb_checkpoints/
+
+# Environment secrets
+.env
+instance/
